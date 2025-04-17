@@ -1,7 +1,8 @@
 package com.example.application.services;
 
-import com.example.application.data.SamplePerson;
-import com.example.application.data.SamplePersonRepository;
+
+import com.example.application.data.entities.User;
+import com.example.application.data.repositories.UserRepository;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -9,19 +10,19 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 @Service
-public class SamplePersonService {
+public class UserService {
 
-    private final SamplePersonRepository repository;
+    private final UserRepository repository;
 
-    public SamplePersonService(SamplePersonRepository repository) {
+    public UserService(UserRepository repository) {
         this.repository = repository;
     }
 
-    public Optional<SamplePerson> get(Long id) {
+    public Optional<User> get(Long id) {
         return repository.findById(id);
     }
 
-    public SamplePerson save(SamplePerson entity) {
+    public User save(User entity) {
         return repository.save(entity);
     }
 
@@ -29,11 +30,11 @@ public class SamplePersonService {
         repository.deleteById(id);
     }
 
-    public Page<SamplePerson> list(Pageable pageable) {
+    public Page<User> list(Pageable pageable) {
         return repository.findAll(pageable);
     }
 
-    public Page<SamplePerson> list(Pageable pageable, Specification<SamplePerson> filter) {
+    public Page<User> list(Pageable pageable, Specification<User> filter) {
         return repository.findAll(filter, pageable);
     }
 
@@ -41,4 +42,9 @@ public class SamplePersonService {
         return (int) repository.count();
     }
 
+    public Boolean userNameAvailable(String username){
+        return repository.findByUsername(username).isEmpty();
+    }
+
 }
+
