@@ -11,6 +11,10 @@ public class Event extends AbstractEntity {
     private LocalDate date;
 
     @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private User owner;
+
+    @ManyToOne
     @JoinColumn(name = "place_id")
     private Place place;
 
@@ -25,6 +29,14 @@ public class Event extends AbstractEntity {
             inverseJoinColumns = @JoinColumn(name = "instrument_id")
     )
     private List<Instrument> instruments;
+
+    public User getOwner() {
+        return owner;
+    }
+
+    public void setOwner(User owner) {
+        this.owner = owner;
+    }
 
     public String getName() {
         return name;

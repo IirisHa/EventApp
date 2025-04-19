@@ -28,7 +28,7 @@ public class LoginView extends LoginOverlay implements BeforeEnterObserver {
         LoginI18n i18n = new LoginI18n();
         i18n.setHeader(new LoginI18n.Header());
         i18n.getHeader().setTitle("Tapahtumat.fi");
-        i18n.getHeader().setDescription("Login using john/user or emma/admin");
+        i18n.getHeader().setDescription("Login using john/user, jane/user, bob/user or emma/admin");
         i18n.setAdditionalInformation(null);
 
         // Kenttien ja napin tekstien asettaminen

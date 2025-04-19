@@ -2,20 +2,23 @@ package com.example.application.views.events;
 
 import com.example.application.data.entities.Event;
 import com.example.application.data.entities.Instrument;
-import com.example.application.data.entities.User;
+import com.example.application.data.entities.Place;
 import com.example.application.services.EventService;
 import com.example.application.services.InstrumentService;
+import com.example.application.services.PlaceService;
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dependency.Uses;
-import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.grid.GridVariant;
 import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.OrderedList;
+import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -25,44 +28,81 @@ import com.vaadin.flow.router.Menu;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
-import com.vaadin.flow.spring.data.VaadinSpringDataHelpers;
 import com.vaadin.flow.theme.lumo.LumoUtility;
+import com.vaadin.flow.theme.lumo.LumoUtility.AlignItems;
+import com.vaadin.flow.theme.lumo.LumoUtility.Display;
+import com.vaadin.flow.theme.lumo.LumoUtility.FontSize;
+import com.vaadin.flow.theme.lumo.LumoUtility.Gap;
+import com.vaadin.flow.theme.lumo.LumoUtility.JustifyContent;
+import com.vaadin.flow.theme.lumo.LumoUtility.ListStyleType;
+import com.vaadin.flow.theme.lumo.LumoUtility.Margin;
+import com.vaadin.flow.theme.lumo.LumoUtility.MaxWidth;
+import com.vaadin.flow.theme.lumo.LumoUtility.Padding;
+import com.vaadin.flow.theme.lumo.LumoUtility.TextColor;
+import com.vaadin.flow.theme.lumo.LumoUtility.Width;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.vaadin.lineawesome.LineAwesomeIconUrl;
 
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @PageTitle("Events")
-@Route("grid-with-filters")
+@Route("events")
 @Menu(order = 1, icon = LineAwesomeIconUrl.FILTER_SOLID)
 @AnonymousAllowed
 @Uses(Icon.class)
 public class EventsView extends Div {
 
-    private Grid<Event> grid;
+    private OrderedList eventsContainer;
     private Filters filters;
     private final EventService eventService;
     private final InstrumentService instrumentService;
+    private final PlaceService placeService;
 
-    public EventsView(EventService eventService, InstrumentService instrumentService) {
+    public EventsView(EventService eventService, InstrumentService instrumentService, PlaceService placeService) {
         this.eventService = eventService;
         this.instrumentService = instrumentService;
+        this.placeService = placeService;
         setSizeFull();
-        addClassNames("events-view");
+        addClassNames("events-view", MaxWidth.SCREEN_LARGE, Margin.Horizontal.AUTO);
 
-        filters = new Filters(() -> refreshGrid());
-        VerticalLayout layout = new VerticalLayout(createMobileFilters(), filters, createGrid());
-        layout.setSizeFull();
-        layout.setPadding(false);
-        layout.setSpacing(false);
-        add(layout);
+        filters = new Filters(() -> refreshEvents());
+        constructUI();
+        loadEvents();
+    }
+
+    private void constructUI() {
+        addClassNames(Padding.LARGE);
+
+        HorizontalLayout headerContainer = new HorizontalLayout();
+        headerContainer.addClassNames(AlignItems.CENTER, JustifyContent.BETWEEN, Width.FULL);
+
+        VerticalLayout headerTextContainer = new VerticalLayout();
+        headerTextContainer.setPadding(false);
+        headerTextContainer.setSpacing(false);
+
+        H2 header = new H2("Upcoming Events");
+        header.addClassNames(Margin.Bottom.NONE, Margin.Top.XLARGE, FontSize.XXXLARGE);
+
+        Paragraph description = new Paragraph("Find and join exciting musical events near you");
+        description.addClassNames(Margin.Bottom.XLARGE, Margin.Top.NONE, TextColor.SECONDARY);
+
+        headerTextContainer.add(header, description);
+        headerContainer.add(headerTextContainer);
+
+        HorizontalLayout mobileFilters = createMobileFilters();
+
+        eventsContainer = new OrderedList();
+        eventsContainer.addClassNames(Gap.MEDIUM, Display.GRID, ListStyleType.NONE, Margin.NONE, Padding.NONE);
+        eventsContainer.getStyle().set("grid-template-columns", "repeat(auto-fill, minmax(280px, 1fr))");
+
+        add(headerContainer, mobileFilters, filters, eventsContainer);
     }
 
     private HorizontalLayout createMobileFilters() {
@@ -95,12 +135,21 @@ public class EventsView extends Div {
         private final TextField organiser = new TextField("Organiser");
         private final DatePicker date = new DatePicker("Date of Event");
         private final ComboBox<Instrument> instruments = new ComboBox<>("Instruments");
+        private final ComboBox<String> city = new ComboBox<>("City");
+
 
         public Filters(Runnable onSearch) {
             setWidthFull();
             addClassName("filter-layout");
             instruments.setItems(instrumentService.findAll());
             instruments.setItemLabelGenerator(Instrument::getName);
+
+            // Get all unique cities from places
+            List<String> cities = placeService.findAll().stream()
+                    .map(Place::getCity)
+                    .distinct()
+                    .collect(Collectors.toList());
+            city.setItems(cities);
 
             // Action buttons
             Button resetBtn = new Button("Reset");
@@ -110,6 +159,7 @@ public class EventsView extends Div {
                 organiser.clear();
                 date.clear();
                 instruments.clear();
+                city.clear();
                 onSearch.run();
             });
 
@@ -121,7 +171,7 @@ public class EventsView extends Div {
             actions.addClassName(LumoUtility.Gap.SMALL);
             actions.addClassName("actions");
 
-            add(name, organiser, createDateRangeFilter(), instruments, actions);
+            add(name, organiser, createDateRangeFilter(), instruments, city, actions);
         }
 
         private Component createDateRangeFilter() {
@@ -156,11 +206,17 @@ public class EventsView extends Div {
                         root.get("date"), date.getValue()));
             }
 
-            // Filter by instrument -> suodatus relaatiossa olevan entiteetin osalta
+            // Filter by instrument
             if (instruments.getValue() != null) {
                 predicates.add(criteriaBuilder.isMember(
                         instruments.getValue(),
                         root.get("instruments")));
+            }
+            // Filter by city
+            if (city.getValue() != null && !city.getValue().isEmpty()) {
+                predicates.add(criteriaBuilder.equal(
+                        root.join("place").get("city"),
+                        city.getValue()));
             }
 
             // If no predicates, return null (no filtering)
@@ -172,40 +228,26 @@ public class EventsView extends Div {
         }
     }
 
-    private Component createGrid() {
-        grid = new Grid<>(Event.class, false);
+    private void loadEvents() {
+        // Get filtered events using service
+        List<Event> events = eventService.list(PageRequest.of(0, 100), filters).getContent();
 
-        // Define columns with appropriate data extraction
-        grid.addColumn(Event::getName)
-                .setHeader("Event Name")
-                .setAutoWidth(true);
+        // Clear previous content
+        eventsContainer.removeAll();
 
-        grid.addColumn(event -> event.getOrganiser().getName())
-                .setHeader("Organiser")
-                .setAutoWidth(true);
-
-        grid.addColumn(event -> event.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")))
-                .setHeader("Date")
-                .setAutoWidth(true);
-
-        grid.addColumn(event -> event.getInstruments().stream()
-                        .map(Instrument::getName)
-                        .collect(Collectors.joining(", ")))
-                .setHeader("Instruments")
-                .setAutoWidth(true);
-
-        // Configure item source using the service with filters
-        grid.setItems(query -> eventService.list(
-                VaadinSpringDataHelpers.toSpringPageRequest(query),
-                filters).stream());
-
-        grid.addThemeVariants(GridVariant.LUMO_NO_BORDER);
-        grid.addClassNames(LumoUtility.Border.TOP, LumoUtility.BorderColor.CONTRAST_10);
-
-        return grid;
+        // Add event cards
+        if (events.isEmpty()) {
+            Paragraph noResults = new Paragraph("No events found matching your criteria");
+            noResults.addClassNames(Padding.MEDIUM, TextColor.SECONDARY);
+            eventsContainer.add(noResults);
+        } else {
+            events.forEach(event -> eventsContainer.add(new EventsViewCard(event)));
+        }
     }
 
-    private void refreshGrid() {
-        grid.getDataProvider().refreshAll();
+    private void refreshEvents() {
+        loadEvents();
+        Notification.show("Events refreshed", 2000, Notification.Position.BOTTOM_START);
     }
 }
+

@@ -1,7 +1,10 @@
 package com.example.application.services;
 
 import com.example.application.data.entities.Event;
+import com.example.application.data.entities.User;
 import com.example.application.data.repositories.EventRepository;
+
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +18,10 @@ public class EventService {
 
     public EventService(EventRepository repository) {
         this.repository = repository;
+    }
+
+    public List<Event> findAll() {
+        return repository.findAll();
     }
 
     public Optional<Event> get(Long id) {
@@ -33,6 +40,10 @@ public class EventService {
         return repository.findAll(pageable);
     }
 
+    public List<Event> findByOwner(User owner) {
+        return repository.findByOwner(owner);
+    }
+
     public Page<Event> list(Pageable pageable, Specification<Event> filter) {
         return repository.findAll(filter, pageable);
     }
@@ -40,6 +51,8 @@ public class EventService {
     public int count() {
         return (int) repository.count();
     }
+
+
 
 }
 

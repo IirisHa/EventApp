@@ -39,6 +39,7 @@ public class RegisterComponent extends Div {
         MultiFileMemoryBuffer buffer = new MultiFileMemoryBuffer();
         Upload profilePicture = new Upload(buffer);
         profilePicture.setMaxFiles(1);
+
         profilePicture.setAcceptedFileTypes("image/*"); // yksi tai useampi MIME määritys
         profilePicture.addSucceededListener(event -> {
             String filename = event.getFileName();

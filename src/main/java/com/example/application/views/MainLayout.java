@@ -56,6 +56,9 @@ public class MainLayout extends AppLayout {
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
         addHeaderContent();
+        //getElement().appendChild(createBottomCopyright().getElement());
+
+
     }
 
     private void addHeaderContent() {
@@ -92,14 +95,30 @@ public class MainLayout extends AppLayout {
 
         return nav;
     }
+    /*private Div createBottomCopyright() {
+        Div copyright = new Div();
+        copyright.add(new Span("© 2025 EventApp, All Rights Reserved"));
 
-    /*private Footer createFooter() {
-        Footer footer = new Footer();
-        footer.add(new Span("© 2025 EventApp, All Rights Reserved"));
-        return footer;
+        copyright.getStyle()
+                .set("width", "100%")
+                .set("padding", "1em")
+                .set("text-align", "center")
+                .set("background-color", "#f8f8f8")
+                .set("box-shadow", "0 -1px 5px rgba(0,0,0,0.05)")
+                .set("position", "fixed")  // Fixed position at the bottom
+                .set("bottom", "0");
+
+        return copyright;
     }*/
+
+
     private Footer createFooter() {
         Footer layout = new Footer();
+
+        layout.getStyle()
+                .set("display", "flex")
+                .set("flex-direction", "column")
+                .set("gap", "var(--lumo-space-s)");
 
         Optional<User> maybeUser = authenticatedUser.get();
         if (maybeUser.isPresent()) {
@@ -134,6 +153,16 @@ public class MainLayout extends AppLayout {
             registerButton.addClickListener(e -> registerComponent.openRegisterComponent());
             layout.add(loginLink, registerButton, registerComponent);
         }
+
+        Div copyright = new Div();
+        copyright.add(new Span("© 2025 EventApp, All Rights Reserved"));
+        copyright.getStyle()
+                .set("width", "100%")
+                .set("padding", "0.5em 0")
+                .set("text-align", "center")
+                .set("font-size", "12px")
+                .set("color", "gray");
+        layout.add(copyright);
 
         return layout;
     }
