@@ -31,7 +31,7 @@ public class RegisterComponent extends Div {
         dialog = new Dialog();
         User user = new User();
 
-        dialog.setHeaderTitle("New employee");
+        dialog.setHeaderTitle("New user");
 
         FormLayout formLayout = new FormLayout();
         TextField username = new TextField("username");

@@ -26,13 +26,18 @@ import java.util.stream.Collectors;
 
 public class EventsViewCard extends ListItem {
 
-    // Define some image URLs that we can use for different events
     private static final String[] IMAGE_URLS = {
-            "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=750&q=80",
-            "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6a3?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=750&q=80",
-            "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=750&q=80",
-            "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=750&q=80",
-            "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=750&q=80"
+            "https://cdn.pixabay.com/photo/2016/09/08/21/09/piano-1655558_1280.jpg",
+            "https://cdn.pixabay.com/photo/2016/09/08/21/09/piano-1655558_1280.jpg",
+            "https://cdn.pixabay.com/photo/2022/05/24/19/28/cello-7219171_1280.jpg",
+            "https://cdn.pixabay.com/photo/2016/11/23/14/48/bowed-instrument-1853324_1280.jpg",
+            "https://cdn.pixabay.com/photo/2017/11/12/16/41/musician-2943109_1280.jpg",
+            "https://cdn.pixabay.com/photo/2018/01/18/12/39/music-3090204_1280.jpg",
+            "https://cdn.pixabay.com/photo/2020/08/06/16/35/live-performance-5468470_1280.jpg",
+            "https://cdn.pixabay.com/photo/2016/11/19/09/57/violins-1838390_1280.jpg",
+            "https://cdn.pixabay.com/photo/2017/02/25/22/05/orchestra-2098877_1280.jpg",
+            "https://cdn.pixabay.com/photo/2020/05/11/15/54/bass-5158902_1280.jpg",
+            "https://cdn.pixabay.com/photo/2020/12/09/18/42/violin-5818267_1280.jpg"
     };
 
     public EventsViewCard(Event event) {
@@ -44,8 +49,6 @@ public class EventsViewCard extends ListItem {
                 Margin.Bottom.MEDIUM, Overflow.HIDDEN, BorderRadius.MEDIUM, Width.FULL);
         div.setHeight("160px");
 
-        // Deterministically select an image URL based on the event's ID
-        // This ensures the same event always gets the same image
         String imageUrl = IMAGE_URLS[Math.abs(event.getId().hashCode()) % IMAGE_URLS.length];
 
         Image image = new Image();
@@ -66,7 +69,6 @@ public class EventsViewCard extends ListItem {
         Paragraph dateInfo = new Paragraph("Date: " + event.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
         dateInfo.addClassName(Margin.Vertical.MEDIUM);
 
-        // Add place information
         Paragraph placeInfo = new Paragraph();
         if (event.getPlace() != null) {
             placeInfo.setText("Location: " + event.getPlace().getName() + ", " +

@@ -31,7 +31,6 @@ INSERT INTO event(id, version, name, date, owner_id, organiser_id, place_id) VAL
                                                                        (9, 1, 'Jazz Night', '2025-12-05', 1, 1, 3),
                                                                        (10, 1, 'String Quartet Series', '2025-12-15', 2, 2, 4);
 
--- Insert into INSTRUMENT
 INSERT INTO instrument(id, version, name) VALUES
                                               (1, 1, 'Piano'),
                                               (2, 1, 'Cello'),
