@@ -36,7 +36,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-@PageTitle("Manage events")
+@PageTitle("page.title.admin")
 @Route("admin/events")
 @Menu(order = 2, icon = LineAwesomeIconUrl.CALENDAR_SOLID)
 @RolesAllowed({"ADMIN"})

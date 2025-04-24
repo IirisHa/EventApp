@@ -4,6 +4,8 @@ import com.example.application.data.entities.User;
 import com.example.application.security.AuthenticatedUser;
 import com.example.application.services.UserService;
 import com.example.application.views.login.RegisterComponent;
+import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.applayout.AppLayout;
 import com.vaadin.flow.component.applayout.DrawerToggle;
 import com.vaadin.flow.component.avatar.Avatar;
@@ -14,9 +16,14 @@ import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.SvgIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
 import com.vaadin.flow.component.orderedlayout.Scroller;
+import com.vaadin.flow.component.page.WebStorage;
 import com.vaadin.flow.component.sidenav.SideNav;
 import com.vaadin.flow.component.sidenav.SideNavItem;
+import com.vaadin.flow.i18n.I18NProvider;
+import com.vaadin.flow.i18n.LocaleChangeEvent;
+import com.vaadin.flow.i18n.LocaleChangeObserver;
 import com.vaadin.flow.router.Layout;
+import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.server.StreamResource;
 import com.vaadin.flow.server.auth.AccessAnnotationChecker;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
@@ -27,16 +34,21 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.io.ByteArrayInputStream;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 /**
  * The main view is a top-level placeholder for other views.
  */
 @Layout
 @AnonymousAllowed
-public class MainLayout extends AppLayout {
+public class MainLayout extends AppLayout implements LocaleChangeObserver {
 
     private H1 viewTitle;
+    private Span appName;
+    private SideNav nav;
+    private Scroller scroller;
     private final AuthenticatedUser authenticatedUser;
     private AccessAnnotationChecker accessChecker;
 
@@ -44,20 +56,27 @@ public class MainLayout extends AppLayout {
 
     private final PasswordEncoder passwordEncoder;
 
+    private final I18NProvider provider;
+
 
     public MainLayout(AuthenticatedUser authenticatedUser,
                       AccessAnnotationChecker accessChecker,
                       UserService userService,
-                      PasswordEncoder passwordEncoder) {
+                      PasswordEncoder passwordEncoder, I18NProvider provider) {
         this.authenticatedUser = authenticatedUser;
         this.accessChecker = accessChecker;
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
+        this.provider = provider;
+
+        WebStorage.getItem("locale", value -> {
+            if (value != null)
+                UI.getCurrent().setLocale(Locale.forLanguageTag(value));
+        });
+
         setPrimarySection(Section.DRAWER);
         addDrawerContent();
         addHeaderContent();
-        //getElement().appendChild(createBottomCopyright().getElement());
-
 
     }
 
@@ -72,11 +91,14 @@ public class MainLayout extends AppLayout {
     }
 
     private void addDrawerContent() {
-        Span appName = new Span("EventApp");
+        appName = new Span(getTranslation("myapp"));
         appName.addClassNames(LumoUtility.FontWeight.SEMIBOLD, LumoUtility.FontSize.LARGE);
         Header header = new Header(appName);
 
-        Scroller scroller = new Scroller(createNavigation());
+        scroller = new Scroller(createNavigation());
+        nav = createNavigation(); // tallenna viite
+        scroller.setContent(nav);
+
 
         addToDrawer(header, scroller, createFooter());
     }
@@ -86,34 +108,31 @@ public class MainLayout extends AppLayout {
 
         List<MenuEntry> menuEntries = MenuConfiguration.getMenuEntries();
         menuEntries.forEach(entry -> {
+            // Use getTranslation to get the translated title
+            String translatedTitle = getTranslation("nav." + entry.title().toLowerCase().replace(" ", "."));
+
             if (entry.icon() != null) {
-                nav.addItem(new SideNavItem(entry.title(), entry.path(), new SvgIcon(entry.icon())));
+                nav.addItem(new SideNavItem(translatedTitle, entry.path(), new SvgIcon(entry.icon())));
             } else {
-                nav.addItem(new SideNavItem(entry.title(), entry.path()));
+                nav.addItem(new SideNavItem(translatedTitle, entry.path()));
             }
         });
 
         return nav;
     }
-    /*private Div createBottomCopyright() {
-        Div copyright = new Div();
-        copyright.add(new Span("© 2025 EventApp, All Rights Reserved"));
-
-        copyright.getStyle()
-                .set("width", "100%")
-                .set("padding", "1em")
-                .set("text-align", "center")
-                .set("background-color", "#f8f8f8")
-                .set("box-shadow", "0 -1px 5px rgba(0,0,0,0.05)")
-                .set("position", "fixed")  // Fixed position at the bottom
-                .set("bottom", "0");
-
-        return copyright;
-    }*/
 
 
     private Footer createFooter() {
         Footer layout = new Footer();
+
+        //kielivalinnat
+        for (Locale locale : provider.getProvidedLocales()){
+            Button button = new Button(locale.getDisplayLanguage(), e -> {
+                    UI.getCurrent().setLocale(locale);
+                    WebStorage.setItem("locale", locale.toLanguageTag());
+        });
+            layout.add(button);
+        }
 
         layout.getStyle()
                 .set("display", "flex")
@@ -170,10 +189,47 @@ public class MainLayout extends AppLayout {
     @Override
     protected void afterNavigation() {
         super.afterNavigation();
-        viewTitle.setText(getCurrentPageTitle());
+        String translatedTitle = getCurrentPageTitle();
+        viewTitle.setText(translatedTitle);
+        UI.getCurrent().getPage().setTitle(translatedTitle);
     }
 
+
+   /* private String getCurrentPageTitle() {
+        return MenuConfiguration.getPageHeader(getContent())
+                .map(key -> getTranslation(key))
+                .orElse("");
+    }*/
+
     private String getCurrentPageTitle() {
-        return MenuConfiguration.getPageHeader(getContent()).orElse("");
+        return Optional.ofNullable(getContent())
+                .map(Component::getClass)
+                .map(clazz -> clazz.getAnnotation(PageTitle.class))
+                .map(PageTitle::value)
+                .map(key -> getTranslation(key))
+                .orElse("");
+    }
+
+
+    @Override
+    public void localeChange(LocaleChangeEvent localeChangeEvent) {
+        appName.setText(getTranslation("myapp"));
+        nav.removeAll();
+        List<MenuEntry> menuEntries = MenuConfiguration.getMenuEntries();
+        for (MenuEntry entry : menuEntries) {
+            String translatedTitle = getTranslation("nav." + entry.title().toLowerCase().replace(" ", "."));
+            if (entry.icon() != null) {
+                nav.addItem(new SideNavItem(translatedTitle, entry.path(), new SvgIcon(entry.icon())));
+            } else {
+                nav.addItem(new SideNavItem(translatedTitle, entry.path()));
+            }
+        }
+
+        //viewTitle.setText(getCurrentPageTitle());
+        String translatedTitle = getCurrentPageTitle();
+        viewTitle.setText(translatedTitle);
+        UI.getCurrent().getPage().setTitle(translatedTitle);
+
+
     }
 }

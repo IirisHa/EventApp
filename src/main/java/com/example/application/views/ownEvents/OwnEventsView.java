@@ -36,7 +36,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
-@PageTitle("My Events")
+@PageTitle("page.title.myEvents")
 @Route("my-events")
 @Menu(order = 2, icon = LineAwesomeIconUrl.CALENDAR_SOLID)
 @RolesAllowed({"USER", "ADMIN"})
