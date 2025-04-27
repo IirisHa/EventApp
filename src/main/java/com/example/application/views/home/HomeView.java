@@ -1,6 +1,8 @@
 package com.example.application.views.home;
 
+import com.example.application.push.ServerPushService;
 import com.vaadin.flow.component.Composite;
+import com.vaadin.flow.component.DetachEvent;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.Footer;
@@ -28,8 +30,12 @@ public class HomeView extends Composite<VerticalLayout> implements LocaleChangeO
     private H1 header;
     private H1 otsikko;
     private H2 subHeader;
+    private final ServerPushService serverPushService;
+
 
     public HomeView() {
+        serverPushService = new ServerPushService();
+
         HorizontalLayout layoutRow = new HorizontalLayout();
         VerticalLayout layoutColumn2 = new VerticalLayout();
         HorizontalLayout layoutRow2 = new HorizontalLayout();
@@ -60,7 +66,12 @@ public class HomeView extends Composite<VerticalLayout> implements LocaleChangeO
 
         Image kuva = new Image("/images/homepage.jpg", "Etusivun kuva");
         kuva.addClassName("hero-image");
-        getContent().add(otsikko, kuva);
+        getContent().add(header,otsikko, kuva);
+
+        UI ui = UI.getCurrent();
+        if (ui != null) {
+            serverPushService.startPush(ui);
+        }
 
 
         // Otsikko 2: tyylit luokan kautta (3 pistettä)
@@ -74,17 +85,24 @@ public class HomeView extends Composite<VerticalLayout> implements LocaleChangeO
         layoutColumn2.add(contentBlock);
         getContent().add(layoutRow, layoutColumn2, layoutRow2);
 
-        // Manually set the page title
         UI.getCurrent().getPage().setTitle(getTranslation("page.title.home"));
 
     }
+
     @Override
     public void localeChange(LocaleChangeEvent event) {
-        // Update all text content when locale changes
         header.setText(getTranslation("home.welcome"));
         otsikko.setText(getTranslation("home.yourEvents"));
         subHeader.setText(getTranslation("home.subtitle"));
-        // Manually set the page title
         UI.getCurrent().getPage().setTitle(getTranslation("page.title.home"));
     }
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        if (serverPushService != null) {
+            serverPushService.stopPush();
+        }
+        super.onDetach(detachEvent);
+    }
+
+
 }
