@@ -36,6 +36,7 @@ public class RegisterComponent extends Div {
         FormLayout formLayout = new FormLayout();
         TextField username = new TextField("username");
         TextField name = new TextField("Name");
+        TextField email = new TextField("Email");
         MultiFileMemoryBuffer buffer = new MultiFileMemoryBuffer();
         Upload profilePicture = new Upload(buffer);
         profilePicture.setMaxFiles(1);
@@ -59,7 +60,7 @@ public class RegisterComponent extends Div {
         });
         PasswordField password = new PasswordField("Password");
         PasswordField confirmPassword = new PasswordField("Confirm password");
-        formLayout.add(username, name, profilePicture, password, confirmPassword);
+        formLayout.add(name, username, email, profilePicture, password, confirmPassword);
         dialog.add(formLayout);
         Button saveButton = new Button("Save");
         Button cancelButton = new Button("Cancel");
@@ -76,6 +77,8 @@ public class RegisterComponent extends Div {
                 .bind(User::getUsername, User::setUsername);
         binder.forField(name).asRequired("Pakollinen kenttä")
                 .bind(User::getName, User::setName);
+        binder.forField(email).asRequired("Pakollinen kenttä")
+                .bind(User::getEmail, User::setEmail);
         binder.forField(password).asRequired("Pakollinen kenttä")
                 .withValidator(pw -> pw.length() >= 8,
                         "Salasanan pitää olla vähintään 8 merkkiä")
@@ -105,6 +108,7 @@ public class RegisterComponent extends Div {
             name.clear();
             username.clear();
             password.clear();
+            email.clear();
             confirmPassword.clear();
             dialog.close();
         });

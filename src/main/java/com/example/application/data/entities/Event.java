@@ -10,6 +10,10 @@ public class Event extends AbstractEntity {
     private String name;
     private LocalDate date;
 
+    @Lob
+    @Column(name = "event_picture", length = 1000000)
+    private byte[] eventPicture;
+
     @ManyToOne
     @JoinColumn(name = "owner_id")
     private User owner;
@@ -76,6 +80,14 @@ public class Event extends AbstractEntity {
 
     public void setInstruments(List<Instrument> instruments) {
         this.instruments = instruments;
+    }
+
+    public byte[] getEventPicture() {
+        return eventPicture;
+    }
+
+    public void setEventPicture(byte[] eventPicture) {
+        this.eventPicture = eventPicture;
     }
 }
 

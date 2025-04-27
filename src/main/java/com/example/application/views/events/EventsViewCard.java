@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 public class EventsViewCard extends ListItem {
 
-    private static final String[] IMAGE_URLS = {
+    private static final String[] FALLBACK_IMAGE_URLS = {
             "https://cdn.pixabay.com/photo/2016/09/08/21/09/piano-1655558_1280.jpg",
             "https://cdn.pixabay.com/photo/2016/09/08/21/09/piano-1655558_1280.jpg",
             "https://cdn.pixabay.com/photo/2022/05/24/19/28/cello-7219171_1280.jpg",
@@ -49,11 +49,19 @@ public class EventsViewCard extends ListItem {
                 Margin.Bottom.MEDIUM, Overflow.HIDDEN, BorderRadius.MEDIUM, Width.FULL);
         div.setHeight("160px");
 
-        String imageUrl = IMAGE_URLS[Math.abs(event.getId().hashCode()) % IMAGE_URLS.length];
-
         Image image = new Image();
         image.setWidth("100%");
-        image.setSrc(imageUrl);
+
+        // Tarkistetaan, onko tapahtumalla kuva, jos ei, lisätään varakuva
+        if (event.getEventPicture() != null && event.getEventPicture().length > 0) {
+            String imageDataUrl = "data:image/jpeg;base64," +
+                    java.util.Base64.getEncoder().encodeToString(event.getEventPicture());
+            image.setSrc(imageDataUrl);
+        } else {
+            String fallbackImageUrl = FALLBACK_IMAGE_URLS[Math.abs(event.getId().hashCode()) % FALLBACK_IMAGE_URLS.length];
+            image.setSrc(fallbackImageUrl);
+        }
+
         image.setAlt(event.getName());
 
         div.add(image);

@@ -15,6 +15,7 @@ import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.SvgIcon;
 import com.vaadin.flow.component.menubar.MenuBar;
+import com.vaadin.flow.component.orderedlayout.FlexLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.page.Push;
 import com.vaadin.flow.component.page.WebStorage;
@@ -37,7 +38,6 @@ import java.io.ByteArrayInputStream;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
 /**
  * The main view is a top-level placeholder for other views.
@@ -59,6 +59,8 @@ public class MainLayout extends AppLayout implements LocaleChangeObserver {
 
     private final I18NProvider provider;
 
+    private Div copyrightFooter;
+
 
     public MainLayout(AuthenticatedUser authenticatedUser,
                       AccessAnnotationChecker accessChecker,
@@ -79,6 +81,7 @@ public class MainLayout extends AppLayout implements LocaleChangeObserver {
         addDrawerContent();
         addHeaderContent();
 
+        addCopyrightFooter();
     }
 
     private void addHeaderContent() {
@@ -97,11 +100,29 @@ public class MainLayout extends AppLayout implements LocaleChangeObserver {
         Header header = new Header(appName);
 
         scroller = new Scroller(createNavigation());
-        nav = createNavigation(); // tallenna viite
+        nav = createNavigation();
         scroller.setContent(nav);
 
 
         addToDrawer(header, scroller, createFooter());
+    }
+
+    private void addCopyrightFooter() {
+        copyrightFooter = new Div();
+        copyrightFooter.add(new Span("© 2025 EventApp, All Rights Reserved"));
+
+        copyrightFooter.getStyle()
+                .set("width", "100%")
+                .set("padding", "0.5em 0")
+                .set("text-align", "center")
+                .set("font-size", "12px")
+                .set("color", "gray")
+                .set("position", "fixed")
+                .set("bottom", "0")
+                .set("background-color", "white")
+                .set("border-top", "1px solid #e0e0e0");
+
+        getElement().appendChild(copyrightFooter.getElement());
     }
 
     private SideNav createNavigation() {
@@ -109,7 +130,6 @@ public class MainLayout extends AppLayout implements LocaleChangeObserver {
 
         List<MenuEntry> menuEntries = MenuConfiguration.getMenuEntries();
         menuEntries.forEach(entry -> {
-            // Use getTranslation to get the translated title
             String translatedTitle = getTranslation("nav." + entry.title().toLowerCase().replace(" ", "."));
 
             if (entry.icon() != null) {
@@ -129,9 +149,9 @@ public class MainLayout extends AppLayout implements LocaleChangeObserver {
         //kielivalinnat
         for (Locale locale : provider.getProvidedLocales()){
             Button button = new Button(locale.getDisplayLanguage(), e -> {
-                    UI.getCurrent().setLocale(locale);
-                    WebStorage.setItem("locale", locale.toLanguageTag());
-        });
+                UI.getCurrent().setLocale(locale);
+                WebStorage.setItem("locale", locale.toLanguageTag());
+            });
             layout.add(button);
         }
 
@@ -174,16 +194,7 @@ public class MainLayout extends AppLayout implements LocaleChangeObserver {
             layout.add(loginLink, registerButton, registerComponent);
         }
 
-        Div copyright = new Div();
-        copyright.add(new Span("© 2025 EventApp, All Rights Reserved"));
-        copyright.getStyle()
-                .set("width", "100%")
-                .set("padding", "0.5em 0")
-                .set("text-align", "center")
-                .set("font-size", "12px")
-                .set("color", "gray");
-        layout.add(copyright);
-
+        // Copyright on nyt omassa metodissa
         return layout;
     }
 
@@ -193,14 +204,10 @@ public class MainLayout extends AppLayout implements LocaleChangeObserver {
         String translatedTitle = getCurrentPageTitle();
         viewTitle.setText(translatedTitle);
         UI.getCurrent().getPage().setTitle(translatedTitle);
+
+        getContent().getElement().getStyle().set("padding-bottom", "40px");
     }
 
-
-   /* private String getCurrentPageTitle() {
-        return MenuConfiguration.getPageHeader(getContent())
-                .map(key -> getTranslation(key))
-                .orElse("");
-    }*/
 
     private String getCurrentPageTitle() {
         return Optional.ofNullable(getContent())
@@ -226,11 +233,8 @@ public class MainLayout extends AppLayout implements LocaleChangeObserver {
             }
         }
 
-        //viewTitle.setText(getCurrentPageTitle());
         String translatedTitle = getCurrentPageTitle();
         viewTitle.setText(translatedTitle);
         UI.getCurrent().getPage().setTitle(translatedTitle);
-
-
     }
 }
